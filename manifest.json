@@ -10,5 +10,11 @@
   },
   "background": {
     "service_worker": "background.js"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["index.html"],
+      "matches": ["https://*.somtoday.nl/*"]
+    }
+  ]
 }
