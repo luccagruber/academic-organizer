@@ -5,21 +5,63 @@
   <title>Academic Organizer</title>
   <style>
     body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #f8fafc; padding: 24px; max-width: 800px; margin: 0 auto; }
-    h1 { font-size: 1.5rem; color: #38bdf8; margin-bottom: 24px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    h1 { font-size: 1.5rem; color: #38bdf8; margin: 0; }
+    .status { color: #64748b; font-size: 0.85rem; }
     .task-card { background: #1e293b; border-radius: 8px; padding: 16px; margin-bottom: 12px; border-left: 4px solid #38bdf8; }
     .task-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .subject { font-weight: 600; text-transform: capitalize; font-size: 1.1rem; }
+    .subject { font-weight: 600; text-transform: capitalize; font-size: 1.1rem; color: #f8fafc; }
     .date-badge { background: #334155; color: #e2e8f0; padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; }
     .title { color: #cbd5e1; font-weight: 500; margin-bottom: 6px; }
     .desc { color: #94a3b8; font-size: 0.9rem; white-space: pre-line; line-height: 1.4; }
+    .empty-state { text-align: center; color: #64748b; padding: 40px 0; }
   </style>
 </head>
 <body>
-  <h1>Homework Timeline</h1>
-  <div id="task-list"></div>
+  <div class="header">
+    <h1>Homework Timeline</h1>
+    <div id="last-updated" class="status">Not synced yet</div>
+  </div>
+
+  <div id="task-list">
+    <div class="empty-state">No tasks stored yet. Click the extension on Somtoday to load your timeline.</div>
+  </div>
 
   <script>
-    // Live payload rendering will mount here
+    function renderTasks() {
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.get(['somtodayTasks', 'lastUpdated'], (result) => {
+          const tasks = result.somtodayTasks || [];
+          const lastUpdated = result.lastUpdated || '';
+          
+          if (lastUpdated) {
+            document.getElementById('last-updated').innerText = 'Last updated at ' + lastUpdated;
+          }
+
+          const container = document.getElementById('task-list');
+          if (tasks.length === 0) return;
+
+          container.innerHTML = tasks.map(task => `
+            <div class="task-card">
+              <div class="task-header">
+                <span class="subject">${task.subject}</span>
+                <span class="date-badge">${task.date}</span>
+              </div>
+              <div class="title">${task.title}</div>
+              ${task.description ? `<div class="desc">${task.description}</div>` : ''}
+            </div>
+          `).join('');
+        });
+      }
+    }
+
+    // Load on page open
+    document.addEventListener('DOMContentLoaded', renderTasks);
+
+    // Re-render automatically if updated while open
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+      chrome.storage.onChanged.addListener(renderTasks);
+    }
   </script>
 </body>
 </html>

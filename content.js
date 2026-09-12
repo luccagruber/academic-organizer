@@ -1,23 +1,36 @@
 (function() {
-  console.log("Academic Organizer: Extracting homework...");
-  
-  // Scrape visible study guide items / assignments from Somtoday page
-  const items = document.querySelectorAll('.studiewijzer-item, [class*="studiewijzer"], tr, .card');
-  let extracted = [];
+  console.log("Academic Organizer: Fetching homework...");
 
-  items.forEach(el => {
-    const text = el.innerText || "";
+  // Extract task elements from the current page
+  const items = document.querySelectorAll('.studiewijzer-item, [class*="studiewijzer"], tr, .card');
+  let tasks = [];
+
+  items.forEach((el, index) => {
+    const text = el.innerText ? el.innerText.trim() : "";
     if (text.length > 5 && !text.includes("Inloggen")) {
-      extracted.push(text.trim());
+      const lines = text.split('\n').filter(l => l.trim().length > 0);
+      
+      tasks.push({
+        id: index,
+        subject: lines[0] || "General",
+        title: lines[1] || text.substring(0, 40),
+        description: lines.slice(2).join(" ") || "",
+        date: new Date().toLocaleDateString('nl-NL') // Default to today if date parsing isn't explicit
+      });
     }
   });
 
-  if (extracted.length === 0) {
-    alert("No tasks visible on current screen. Make sure you are on the Huiswerk / Agenda tab!");
+  if (tasks.length === 0) {
+    alert("No tasks visible on current screen. Open your Somtoday Huiswerk/Agenda page!");
     return;
   }
 
-  // Display raw structured result in console and alert status
-  console.log("Extracted Tasks:", extracted);
-  alert(`Successfully fetched ${extracted.length} items from Somtoday! Check DevTools console for raw output.`);
+  // Save to Chrome Local Storage and notify user
+  chrome.storage.local.set({ somtodayTasks: tasks, lastUpdated: new Date().toLocaleTimeString() }, () => {
+    alert(`Fetched ${tasks.length} tasks! Opening dashboard...`);
+    
+    // Open or refresh the local dashboard
+    const dashboardUrl = chrome.runtime.getURL("index.html");
+    window.open(dashboardUrl, "_blank");
+  });
 })();
