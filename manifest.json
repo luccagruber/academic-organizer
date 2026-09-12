@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Somtoday Academic Organizer",
+  "version": "1.0",
+  "description": "Extracts and orders Somtoday homework by due date.",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["https://*.somtoday.nl/*"],
+  "action": {
+    "default_title": "Fetch Homework"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
